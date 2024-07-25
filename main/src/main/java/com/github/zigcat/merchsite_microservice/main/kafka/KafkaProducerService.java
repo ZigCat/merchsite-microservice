@@ -16,23 +16,32 @@ import java.util.concurrent.ExecutionException;
 @Service
 @Slf4j
 public class KafkaProducerService {
-    private final String AUTH_REQUEST_TOPIC = "auth-request";
-    private final String AUTH_REPLY_TOPIC = "auth-reply";
-
-    private final KafkaTemplate<String, String> kafkaTemplate;
-    private final ReplyingKafkaTemplate<String, String, String> replyingKafkaTemplate;
+    private final ReplyingKafkaTemplate<String, String, String> authTemplate;
+    private final ReplyingKafkaTemplate<String, String, String> loginTemplate;
 
     @Autowired
-    public KafkaProducerService(KafkaTemplate<String, String> kafkaTemplate,
-                                ReplyingKafkaTemplate<String, String, String> replyingKafkaTemplate) {
-        this.kafkaTemplate = kafkaTemplate;
-        this.replyingKafkaTemplate = replyingKafkaTemplate;
+    public KafkaProducerService(ReplyingKafkaTemplate<String, String, String> authTemplate,
+                                ReplyingKafkaTemplate<String, String, String> loginTemplate) {
+        this.authTemplate = authTemplate;
+        this.loginTemplate = loginTemplate;
     }
 
-    public String sendUserForAuth(String userJson) throws ExecutionException, InterruptedException {
-        ProducerRecord<String, String> record = new ProducerRecord<>(AUTH_REQUEST_TOPIC, userJson);
+    public String sendUserForLogin(String userJson) throws ExecutionException, InterruptedException {
+        String LOGIN_REQUEST_TOPIC = "login-request";
+        String LOGIN_REPLY_TOPIC = "login-reply";
+        ProducerRecord<String, String> record = new ProducerRecord<>(LOGIN_REQUEST_TOPIC, userJson);
+        record.headers().add(new RecordHeader(KafkaHeaders.REPLY_TOPIC, LOGIN_REPLY_TOPIC.getBytes()));
+        RequestReplyFuture<String, String, String> replyFuture = loginTemplate.sendAndReceive(record);
+        ConsumerRecord<String, String> consumerRecord = replyFuture.get();
+        return consumerRecord.value();
+    }
+
+    public String sendUserForAuth(String tokenJson) throws ExecutionException, InterruptedException {
+        String AUTH_REQUEST_TOPIC = "auth-request";
+        String AUTH_REPLY_TOPIC = "auth-reply";
+        ProducerRecord<String, String> record = new ProducerRecord<>(AUTH_REQUEST_TOPIC, tokenJson);
         record.headers().add(new RecordHeader(KafkaHeaders.REPLY_TOPIC, AUTH_REPLY_TOPIC.getBytes()));
-        RequestReplyFuture<String, String, String> replyFuture = replyingKafkaTemplate.sendAndReceive(record);
+        RequestReplyFuture<String, String, String> replyFuture = authTemplate.sendAndReceive(record);
         ConsumerRecord<String, String> consumerRecord = replyFuture.get();
         return consumerRecord.value();
     }

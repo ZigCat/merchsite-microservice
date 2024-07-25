@@ -6,12 +6,14 @@ import com.github.zigcat.merchsite_microservice.main.dto.JwtResponse;
 import com.github.zigcat.merchsite_microservice.main.dto.UserDTO;
 import com.github.zigcat.merchsite_microservice.main.entity.AppUser;
 import com.github.zigcat.merchsite_microservice.main.services.UserService;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -47,5 +49,10 @@ public class AppUserController {
         } catch (JsonProcessingException | ExecutionException | InterruptedException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
+    }
+
+    @GetMapping("/smth")
+    public ResponseEntity<?> something(){
+        return ResponseEntity.ok().build();
     }
 }

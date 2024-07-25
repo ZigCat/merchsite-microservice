@@ -59,19 +59,36 @@ public class KafkaConfig {
     }
 
     @Bean
-    public KafkaMessageListenerContainer<String, String> replyContainer(
-            ConsumerFactory<String, String> factory
+    public KafkaMessageListenerContainer<String, String> loginReplyContainer(
+            ConsumerFactory<String, String> consumerFactory
     ){
         ContainerProperties properties =
-                new ContainerProperties("auth-request", "auth-reply");
-        return new KafkaMessageListenerContainer<>(factory, properties);
+                new ContainerProperties("login-reply");
+        return new KafkaMessageListenerContainer<>(consumerFactory, properties);
     }
 
     @Bean
-    public ReplyingKafkaTemplate<String, String, String> replyingKafkaTemplate(
-        ProducerFactory<String, String> producerFactory,
-        KafkaMessageListenerContainer<String, String> container
+    public KafkaMessageListenerContainer<String, String> authReplyContainer(
+            ConsumerFactory<String, String> consumerFactory
     ){
-        return new ReplyingKafkaTemplate<>(producerFactory, container);
+        ContainerProperties properties =
+                new ContainerProperties("auth-reply");
+        return new KafkaMessageListenerContainer<>(consumerFactory, properties);
+    }
+
+    @Bean
+    public ReplyingKafkaTemplate<String, String, String> loginTemplate(
+        ProducerFactory<String, String> producerFactory,
+        KafkaMessageListenerContainer<String, String> loginReplyContainer
+    ){
+        return new ReplyingKafkaTemplate<>(producerFactory, loginReplyContainer);
+    }
+
+    @Bean
+    public ReplyingKafkaTemplate<String, String, String> authTemplate(
+            ProducerFactory<String, String> producerFactory,
+            KafkaMessageListenerContainer<String, String> authReplyContainer
+    ){
+        return new ReplyingKafkaTemplate<>(producerFactory, authReplyContainer);
     }
 }

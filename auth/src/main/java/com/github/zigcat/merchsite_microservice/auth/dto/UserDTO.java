@@ -1,12 +1,12 @@
 package com.github.zigcat.merchsite_microservice.auth.dto;
 
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 @Data
 @Getter
 @Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class UserDTO {
     private String fname;
     private String lname;

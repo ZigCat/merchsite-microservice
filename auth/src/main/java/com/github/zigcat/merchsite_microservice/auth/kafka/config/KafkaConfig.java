@@ -65,6 +65,16 @@ public class KafkaConfig {
     }
 
     @Bean
+    public NewTopic loginRequestTopic(){
+        return new NewTopic("login-request", 1, (short) 1);
+    }
+
+    @Bean
+    public NewTopic loginReplyTopic(){
+        return new NewTopic("login-reply", 1, (short) 1);
+    }
+
+    @Bean
     public NewTopic authRequestTopic(){
         return new NewTopic("auth-request", 1, (short) 1);
     }

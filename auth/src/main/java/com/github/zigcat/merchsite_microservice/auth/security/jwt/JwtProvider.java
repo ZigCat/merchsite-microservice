@@ -35,14 +35,6 @@ public class JwtProvider {
         this.jwtRefreshSecret = Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtRefreshSecret));
     }
 
-    public String resolveToken(HttpServletRequest request){
-        String bearerToken = request.getHeader("Authorization");
-        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
-            return bearerToken.substring(7);
-        }
-        return null;
-    }
-
     public String generateAccessToken(@NonNull AppUser user){
         Instant accessExpirationInstant = LocalDateTime.now().plusMinutes(10).atZone(ZoneId.systemDefault()).toInstant();
         Date accessExpiration = Date.from(accessExpirationInstant);
@@ -73,15 +65,15 @@ public class JwtProvider {
                     .parseClaimsJws(token);
             return true;
         }  catch (ExpiredJwtException e) {
-            log.error("Token expired", e);
+            log.error("Token expired");
         } catch (UnsupportedJwtException e) {
-            log.error("Unsupported jwt", e);
+            log.error("Unsupported jwt");
         } catch (MalformedJwtException e) {
-            log.error("Malformed jwt", e);
+            log.error("Malformed jwt");
         } catch (SignatureException e) {
-            log.error("Invalid signature", e);
+            log.error("Invalid signature");
         } catch (Exception e) {
-            log.error("invalid token", e);
+            log.error("invalid token");
         }
         return false;
     }
@@ -108,5 +100,9 @@ public class JwtProvider {
 
     public Claims getRefreshClaims(@NonNull String token){
         return getClaims(token, jwtRefreshSecret);
+    }
+
+    public String getAccessSubject(@NonNull String token){
+        return getAccessClaims(token).getSubject();
     }
 }

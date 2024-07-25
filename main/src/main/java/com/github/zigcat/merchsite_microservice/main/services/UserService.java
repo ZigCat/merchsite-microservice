@@ -73,7 +73,7 @@ public class UserService {
 
     public JwtResponse login(JwtRequest request) throws JsonProcessingException, ExecutionException, InterruptedException {
         String requestJson = jwtRequestSerializer.serialize(request);
-        String responseJson = kafkaProducerService.sendUserForAuth(requestJson);
+        String responseJson = kafkaProducerService.sendUserForLogin(requestJson);
         return jwtResponseDeserializer.deserialize(responseJson);
     }
 }
