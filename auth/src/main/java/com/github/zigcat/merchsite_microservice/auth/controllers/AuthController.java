@@ -1,8 +1,7 @@
 package com.github.zigcat.merchsite_microservice.auth.controllers;
 
-import com.github.zigcat.merchsite_microservice.auth.dto.UserDTO;
-import com.github.zigcat.merchsite_microservice.auth.security.jwt.JwtRequest;
-import com.github.zigcat.merchsite_microservice.auth.security.jwt.JwtResponse;
+import com.github.zigcat.merchsite_microservice.auth.dto.JwtRequest;
+import com.github.zigcat.merchsite_microservice.auth.dto.JwtResponse;
 import com.github.zigcat.merchsite_microservice.auth.security.jwt.TokenType;
 import com.github.zigcat.merchsite_microservice.auth.services.AuthService;
 import jakarta.persistence.EntityNotFoundException;
@@ -34,16 +33,6 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         } catch (EntityNotFoundException e){
             return ResponseEntity.notFound().build();
-        }
-    }
-
-    @PostMapping("/register")
-    public ResponseEntity<JwtResponse> register(@RequestBody UserDTO user){
-        try {
-            JwtResponse response = service.register(user);
-            return new ResponseEntity<>(response, HttpStatus.CREATED);
-        } catch (AuthException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
     }
 

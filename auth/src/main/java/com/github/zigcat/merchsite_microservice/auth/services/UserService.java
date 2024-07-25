@@ -26,9 +26,4 @@ public class UserService {
     public Optional<AppUser> getByEmail(String email){
         return Optional.ofNullable(repository.getByEmail(email));
     }
-
-    public AppUser saveUser(AppUser user){
-        user.setPassword(encoder.encode(user.getPassword()));
-        return repository.save(user);
-    }
 }

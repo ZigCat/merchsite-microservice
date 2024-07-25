@@ -1,4 +1,4 @@
-package com.github.zigcat.merchsite_microservice.auth.security.jwt;
+package com.github.zigcat.merchsite_microservice.auth.dto;
 
 import com.github.zigcat.merchsite_microservice.auth.entity.AppUser;
 import lombok.AllArgsConstructor;

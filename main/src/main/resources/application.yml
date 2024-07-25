@@ -1,10 +1,10 @@
 server:
-  port: 8080
+  port: 8081
 kafka:
   bootstrap-servers: localhost:9092
 spring:
   application:
-    name: auth
+    name: main
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}
@@ -15,9 +15,5 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-        format_sql: true
+        format-sql: true
     show-sql: true
-jwt:
-  secret:
-    access: x5Xq9PAiHuPFFJ/pG+H45JNQ/yPvNM8jXH3XNhWMp7k=
-    refresh: tFlD6u6wpYbtI0KWpVqLxX3CC4t2+YELUSxWYSdtSxk=
