@@ -1,0 +1,21 @@
+server:
+  port: 8080
+spring:
+  application:
+    name: auth
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: true
+jwt:
+  secret:
+    access: x5Xq9PAiHuPFFJ/pG+H45JNQ/yPvNM8jXH3XNhWMp7k=
+    refresh: tFlD6u6wpYbtI0KWpVqLxX3CC4t2+YELUSxWYSdtSxk=
