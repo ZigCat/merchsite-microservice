@@ -1,5 +1,6 @@
 package com.github.zigcat.merchsite_microservice.main.entity;
 
+import com.github.zigcat.merchsite_microservice.main.entity.interfaces.Modelable;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -9,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class AppOrder {
+public class AppOrder implements Modelable {
     @Id
     @SequenceGenerator(
             name = "orderSequence",
