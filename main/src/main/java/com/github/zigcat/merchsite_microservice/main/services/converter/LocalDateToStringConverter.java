@@ -1,4 +1,4 @@
-package com.github.zigcat.merchsite_microservice.main.services;
+package com.github.zigcat.merchsite_microservice.main.services.converter;
 
 import jakarta.persistence.AttributeConverter;
 

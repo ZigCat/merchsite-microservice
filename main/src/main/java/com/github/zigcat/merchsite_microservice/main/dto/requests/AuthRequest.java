@@ -1,10 +1,8 @@
-package com.github.zigcat.merchsite_microservice.main.dto;
+package com.github.zigcat.merchsite_microservice.main.dto.requests;
 
 import lombok.*;
 
 @Data
-@Getter
-@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 public class AuthRequest {

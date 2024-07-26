@@ -1,6 +1,6 @@
 package com.github.zigcat.merchsite_microservice.main.security;
 
-import com.github.zigcat.merchsite_microservice.main.dto.AuthRequest;
+import com.github.zigcat.merchsite_microservice.main.dto.requests.AuthRequest;
 import com.github.zigcat.merchsite_microservice.main.entity.AppUser;
 import com.github.zigcat.merchsite_microservice.main.kafka.KafkaProducerService;
 import com.github.zigcat.merchsite_microservice.main.security.user.AppUserDetails;

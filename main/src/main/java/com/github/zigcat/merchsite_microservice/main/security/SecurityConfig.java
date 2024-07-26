@@ -1,8 +1,10 @@
 package com.github.zigcat.merchsite_microservice.main.security;
 
+import com.github.zigcat.merchsite_microservice.main.entity.enums.Role;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -38,6 +40,7 @@ public class SecurityConfig {
                         authz -> authz
                                 .requestMatchers("/api/user/register").permitAll()
                                 .requestMatchers("/api/user/login").permitAll()
+                                .requestMatchers(HttpMethod.DELETE, "/api/order").hasRole("ADMIN")
                                 .anyRequest().authenticated()
                 )
                 .build();

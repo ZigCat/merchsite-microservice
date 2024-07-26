@@ -1,14 +1,15 @@
 package com.github.zigcat.merchsite_microservice.main.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.github.zigcat.merchsite_microservice.main.dto.enums.Role;
-import com.github.zigcat.merchsite_microservice.main.services.LocalDateToStringConverter;
+import com.github.zigcat.merchsite_microservice.main.entity.enums.Role;
+import com.github.zigcat.merchsite_microservice.main.services.converter.LocalDateToStringConverter;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Entity
 @Data
@@ -35,6 +36,9 @@ public class AppUser {
     private Role role;
     @Convert(converter = LocalDateToStringConverter.class)
     private LocalDate creationDate;
+    @JsonIgnore
+    @OneToMany(mappedBy = "user")
+    private List<AppOrder> orders;
 
     public AppUser(String fname, String lname, String email, String password, Role role, LocalDate creationDate) {
         this.fname = fname;

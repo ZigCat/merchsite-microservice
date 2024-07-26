@@ -1,10 +1,8 @@
-package com.github.zigcat.merchsite_microservice.main.dto;
+package com.github.zigcat.merchsite_microservice.main.dto.responses;
 
 import com.github.zigcat.merchsite_microservice.main.entity.AppUser;
 import lombok.*;
 
-@Getter
-@Setter
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

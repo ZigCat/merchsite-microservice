@@ -1,9 +1,11 @@
-package com.github.zigcat.merchsite_microservice.main.services.jackson;
+package com.github.zigcat.merchsite_microservice.main.services.jackson.config;
 
-import com.github.zigcat.merchsite_microservice.main.dto.AuthRequest;
-import com.github.zigcat.merchsite_microservice.main.dto.JwtRequest;
-import com.github.zigcat.merchsite_microservice.main.dto.JwtResponse;
+import com.github.zigcat.merchsite_microservice.main.dto.requests.AuthRequest;
+import com.github.zigcat.merchsite_microservice.main.dto.requests.JwtRequest;
+import com.github.zigcat.merchsite_microservice.main.dto.responses.JwtResponse;
 import com.github.zigcat.merchsite_microservice.main.entity.AppUser;
+import com.github.zigcat.merchsite_microservice.main.services.jackson.AppDeserializer;
+import com.github.zigcat.merchsite_microservice.main.services.jackson.AppSerializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
