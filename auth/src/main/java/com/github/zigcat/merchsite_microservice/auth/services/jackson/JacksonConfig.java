@@ -1,6 +1,8 @@
 package com.github.zigcat.merchsite_microservice.auth.services.jackson;
 
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.github.zigcat.merchsite_microservice.auth.dto.AuthRequest;
+import com.github.zigcat.merchsite_microservice.auth.dto.AuthResponse;
 import com.github.zigcat.merchsite_microservice.auth.dto.JwtRequest;
 import com.github.zigcat.merchsite_microservice.auth.dto.JwtResponse;
 import com.github.zigcat.merchsite_microservice.auth.entity.AppUser;
@@ -10,12 +12,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class JacksonConfig {
     @Bean
-    public AppSerializer<JwtResponse> jwtResponseSerializer(){
-        return new AppSerializer<>();
-    }
-
-    @Bean
-    public AppSerializer<AppUser> userSerializer(){
+    public AppSerializer<AuthResponse> authResponseSerializer(){
         return new AppSerializer<>();
     }
 
