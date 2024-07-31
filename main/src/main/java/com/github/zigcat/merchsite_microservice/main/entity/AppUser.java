@@ -2,7 +2,6 @@ package com.github.zigcat.merchsite_microservice.main.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.zigcat.merchsite_microservice.main.entity.enums.Role;
-import com.github.zigcat.merchsite_microservice.main.entity.interfaces.Modelable;
 import com.github.zigcat.merchsite_microservice.main.services.converter.LocalDateToStringConverter;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -16,7 +15,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class AppUser implements Modelable {
+public class AppUser {
     @Id
     @SequenceGenerator(
             name = "userSequence",
