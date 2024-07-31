@@ -1,9 +1,9 @@
 package com.github.zigcat.merchsite_microservice.auth.kafka;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.github.zigcat.merchsite_microservice.auth.dto.AuthRequest;
-import com.github.zigcat.merchsite_microservice.auth.dto.JwtRequest;
-import com.github.zigcat.merchsite_microservice.auth.dto.JwtResponse;
+import com.github.zigcat.merchsite_microservice.auth.dto.requests.AuthRequest;
+import com.github.zigcat.merchsite_microservice.auth.dto.requests.JwtRequest;
+import com.github.zigcat.merchsite_microservice.auth.dto.responses.JwtResponse;
 import com.github.zigcat.merchsite_microservice.auth.entity.AppUser;
 import com.github.zigcat.merchsite_microservice.auth.security.jwt.JwtProvider;
 import com.github.zigcat.merchsite_microservice.auth.services.AuthService;

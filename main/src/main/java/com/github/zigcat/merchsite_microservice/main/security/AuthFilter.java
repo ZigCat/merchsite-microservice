@@ -45,6 +45,9 @@ public class AuthFilter extends OncePerRequestFilter {
                     AuthRequest authRequest = new AuthRequest(bearer.substring(7));
                     String requestJson = authRequestSerializer.serialize(authRequest);
                     String responseJson = kafkaProducerService.sendUserForAuth(requestJson);
+                    if(responseJson.startsWith("Error ")){
+                        throw new IllegalStateException("Auth server error occurred");
+                    }
                     AppUser user = userDeserializer.deserialize(responseJson);
                     if (user.getEmail() != null) {
                         AppUserDetails userDetails = new AppUserDetails(user);

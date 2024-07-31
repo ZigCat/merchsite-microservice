@@ -1,7 +1,7 @@
 package com.github.zigcat.merchsite_microservice.auth.controllers;
 
-import com.github.zigcat.merchsite_microservice.auth.dto.JwtRequest;
-import com.github.zigcat.merchsite_microservice.auth.dto.JwtResponse;
+import com.github.zigcat.merchsite_microservice.auth.dto.requests.JwtRequest;
+import com.github.zigcat.merchsite_microservice.auth.dto.responses.JwtResponse;
 import com.github.zigcat.merchsite_microservice.auth.security.jwt.TokenType;
 import com.github.zigcat.merchsite_microservice.auth.services.AuthService;
 import jakarta.persistence.EntityNotFoundException;

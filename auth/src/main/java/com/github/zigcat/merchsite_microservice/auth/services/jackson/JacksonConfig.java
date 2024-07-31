@@ -1,10 +1,8 @@
 package com.github.zigcat.merchsite_microservice.auth.services.jackson;
 
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.github.zigcat.merchsite_microservice.auth.dto.AuthRequest;
-import com.github.zigcat.merchsite_microservice.auth.dto.AuthResponse;
-import com.github.zigcat.merchsite_microservice.auth.dto.JwtRequest;
-import com.github.zigcat.merchsite_microservice.auth.dto.JwtResponse;
+import com.github.zigcat.merchsite_microservice.auth.dto.requests.AuthRequest;
+import com.github.zigcat.merchsite_microservice.auth.dto.requests.JwtRequest;
+import com.github.zigcat.merchsite_microservice.auth.dto.responses.JwtResponse;
 import com.github.zigcat.merchsite_microservice.auth.entity.AppUser;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
