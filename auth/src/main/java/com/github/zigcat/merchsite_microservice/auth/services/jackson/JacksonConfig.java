@@ -17,6 +17,16 @@ public class JacksonConfig {
     }
 
     @Bean
+    public AppSerializer<AppUser> userSerializer(){
+        return new AppSerializer<>();
+    }
+
+    @Bean
+    public AppSerializer<JwtResponse> jwtResponseSerializer(){
+        return new AppSerializer<>();
+    }
+
+    @Bean
     public AppDeserializer<JwtRequest> jwtRequestDeserializer(){
         AppDeserializer<JwtRequest> deserializer = new AppDeserializer<>();
         deserializer.setType(JwtRequest.class);

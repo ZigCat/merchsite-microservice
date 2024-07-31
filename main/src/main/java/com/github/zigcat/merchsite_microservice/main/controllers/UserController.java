@@ -64,8 +64,12 @@ public class UserController {
         try {
             JwtResponse response = service.login(request);
             return new ResponseEntity<>(response, HttpStatus.OK);
-        } catch (JsonProcessingException | ExecutionException | InterruptedException e) {
+        } catch (JsonProcessingException | ExecutionException | InterruptedException | IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        } catch (AuthException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        } catch (EntityNotFoundException e){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
 

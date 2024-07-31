@@ -75,9 +75,19 @@ public class UserService extends EntityService<AppUser>{
         throw new DuplicateKeyException("User with the same email already exists in database");
     }
 
-    public JwtResponse login(JwtRequest request) throws JsonProcessingException, ExecutionException, InterruptedException {
+    public JwtResponse login(JwtRequest request) throws JsonProcessingException, ExecutionException, InterruptedException, AuthException {
         String requestJson = jwtRequestSerializer.serialize(request);
         String responseJson = kafkaProducerService.sendUserForLogin(requestJson);
+        if(responseJson.startsWith("Error ")){
+            switch(responseJson.substring(6)){
+                case "404":
+                    throw new EntityNotFoundException("User not found");
+                case "401":
+                    throw new AuthException("Unauthorized access");
+                default:
+                    throw new IllegalStateException("Auth server error occurred");
+            }
+        }
         return jwtResponseDeserializer.deserialize(responseJson);
     }
 

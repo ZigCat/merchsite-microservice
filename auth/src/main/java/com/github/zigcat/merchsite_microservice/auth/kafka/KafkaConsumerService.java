@@ -10,6 +10,7 @@ import com.github.zigcat.merchsite_microservice.auth.services.AuthService;
 import com.github.zigcat.merchsite_microservice.auth.services.UserService;
 import com.github.zigcat.merchsite_microservice.auth.services.jackson.AppDeserializer;
 import com.github.zigcat.merchsite_microservice.auth.services.jackson.AppSerializer;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.security.auth.message.AuthException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -57,11 +58,14 @@ public class KafkaConsumerService {
             JwtResponse response = service.login(request);
             return jwtResponseSerializer.serialize(response);
         } catch (JsonProcessingException e) {
-            kafkaTemplate.send("auth-error", "500");
-            throw new RuntimeException(e);
+            kafkaTemplate.send("auth-error", "500: "+e.getMessage());
+            return "Error 500";
         } catch (AuthException e) {
-            kafkaTemplate.send("auth-error", "401");
-            throw new RuntimeException(e);
+            kafkaTemplate.send("auth-error", "401: "+e.getMessage());
+            return "Error 401";
+        } catch (EntityNotFoundException e){
+            kafkaTemplate.send("auth-error", "404: "+e.getMessage());
+            return "Error 404";
         }
     }
 
@@ -78,8 +82,8 @@ public class KafkaConsumerService {
                 return userSerializer.serialize(new AppUser());
             }
         } catch (JsonProcessingException e) {
-            kafkaTemplate.send("auth-error", "500");
-            throw new RuntimeException(e);
+            kafkaTemplate.send("auth-error", "500: "+e.getMessage());
+            return "Error 500";
         }
     }
 }
