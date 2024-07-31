@@ -1,5 +1,6 @@
 package com.github.zigcat.merchsite_microservice.main.security;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.zigcat.merchsite_microservice.main.dto.requests.AuthRequest;
 import com.github.zigcat.merchsite_microservice.main.entity.AppUser;
 import com.github.zigcat.merchsite_microservice.main.kafka.KafkaProducerService;
@@ -38,16 +39,16 @@ public class AuthFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws IOException, ServletException {
         String bearer = request.getHeader("Authorization");
-            try {
-                if(bearer != null && bearer.startsWith("Bearer ")) {
-                    AuthRequest authRequest = new AuthRequest(bearer.substring(7));
-                    String requestJson = authRequestSerializer.serialize(authRequest);
-                    String responseJson = kafkaProducerService.sendUserForAuth(requestJson);
-                    if(responseJson.startsWith("Error ")){
-                        throw new IllegalStateException("Auth server error occurred");
-                    }
+        try {
+            if(bearer != null && bearer.startsWith("Bearer ")) {
+                AuthRequest authRequest = new AuthRequest(bearer.substring(7));
+                String requestJson = authRequestSerializer.serialize(authRequest);
+                String responseJson = kafkaProducerService.sendUserForAuth(requestJson);
+                if(!responseJson.startsWith("Error ")){
+                    throw new IllegalStateException("Auth server error occurred");
+                } else {
                     AppUser user = userDeserializer.deserialize(responseJson);
                     if (user.getEmail() != null) {
                         AppUserDetails userDetails = new AppUserDetails(user);
@@ -55,11 +56,12 @@ public class AuthFilter extends OncePerRequestFilter {
                         SecurityContextHolder.getContext().setAuthentication(authentication);
                     }
                 }
-            } catch (ExecutionException | InterruptedException e) {
-                e.printStackTrace();
-            } catch (NullPointerException e){
-                e.printStackTrace();
             }
-        filterChain.doFilter(request, response);
+            filterChain.doFilter(request, response);
+        } catch (ExecutionException | InterruptedException | IllegalStateException e) {
+            log.warn(e.getMessage());
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.getWriter().write(e.getMessage());
+        }
     }
 }
