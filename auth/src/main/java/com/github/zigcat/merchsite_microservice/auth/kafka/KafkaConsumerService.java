@@ -28,6 +28,7 @@ public class KafkaConsumerService {
     private final AppSerializer<JwtResponse> jwtResponseSerializer;
     private final AppDeserializer<AuthRequest> authRequestDeserializer;
     private final AppDeserializer<JwtRequest> jwtRequestDeserializer;
+    private final KafkaTemplate<String, String> kafkaTemplate;
 
     @Autowired
     public KafkaConsumerService(AuthService service,
@@ -36,7 +37,8 @@ public class KafkaConsumerService {
                                 AppSerializer<AppUser> userSerializer,
                                 AppSerializer<JwtResponse> jwtResponseSerializer,
                                 AppDeserializer<AuthRequest> authRequestDeserializer,
-                                AppDeserializer<JwtRequest> jwtRequestDeserializer) {
+                                AppDeserializer<JwtRequest> jwtRequestDeserializer,
+                                KafkaTemplate<String, String> kafkaTemplate) {
         this.service = service;
         this.userService = userService;
         this.provider = provider;
@@ -44,6 +46,7 @@ public class KafkaConsumerService {
         this.jwtResponseSerializer = jwtResponseSerializer;
         this.authRequestDeserializer = authRequestDeserializer;
         this.jwtRequestDeserializer = jwtRequestDeserializer;
+        this.kafkaTemplate = kafkaTemplate;
     }
 
     @KafkaListener(topics = "login-request", containerFactory = "containerFactory")
@@ -54,8 +57,10 @@ public class KafkaConsumerService {
             JwtResponse response = service.login(request);
             return jwtResponseSerializer.serialize(response);
         } catch (JsonProcessingException e) {
+            kafkaTemplate.send("auth-error", "500");
             throw new RuntimeException(e);
         } catch (AuthException e) {
+            kafkaTemplate.send("auth-error", "401");
             throw new RuntimeException(e);
         }
     }
@@ -73,6 +78,7 @@ public class KafkaConsumerService {
                 return userSerializer.serialize(new AppUser());
             }
         } catch (JsonProcessingException e) {
+            kafkaTemplate.send("auth-error", "500");
             throw new RuntimeException(e);
         }
     }

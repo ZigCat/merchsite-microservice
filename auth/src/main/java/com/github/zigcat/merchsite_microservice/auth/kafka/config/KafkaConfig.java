@@ -83,4 +83,9 @@ public class KafkaConfig {
     public NewTopic authReplyTopic(){
         return new NewTopic("auth-reply", 1, (short) 1);
     }
+
+    @Bean
+    public NewTopic errorTopic(){
+        return new NewTopic("auth-error", 1, (short) 1);
+    }
 }
