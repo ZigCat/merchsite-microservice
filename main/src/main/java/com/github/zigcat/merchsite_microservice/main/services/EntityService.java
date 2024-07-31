@@ -1,5 +1,6 @@
 package com.github.zigcat.merchsite_microservice.main.services;
 
+import com.github.zigcat.merchsite_microservice.main.exceptions.RecordNotFoundException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -30,10 +31,10 @@ public abstract class EntityService<T> {
         return repository.findById(id);
     }
 
-    @Transactional(rollbackFor = {EntityNotFoundException.class})
-    public void delete(Integer id){
+    @Transactional(rollbackFor = {RecordNotFoundException.class})
+    public void delete(Integer id) throws RecordNotFoundException {
         T object = getById(id)
-                .orElseThrow(() -> new EntityNotFoundException(type.getName()+" not found"));
+                .orElseThrow(() -> new RecordNotFoundException(type.getName()));
         repository.deleteById(id);
     }
 }

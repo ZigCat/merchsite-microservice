@@ -5,6 +5,10 @@ import com.github.zigcat.merchsite_microservice.main.dto.requests.JwtRequest;
 import com.github.zigcat.merchsite_microservice.main.dto.responses.JwtResponse;
 import com.github.zigcat.merchsite_microservice.main.dto.UserDTO;
 import com.github.zigcat.merchsite_microservice.main.entity.AppUser;
+import com.github.zigcat.merchsite_microservice.main.exceptions.AuthServerErrorException;
+import com.github.zigcat.merchsite_microservice.main.exceptions.AuthenticationErrorException;
+import com.github.zigcat.merchsite_microservice.main.exceptions.RecordAlreadyExistsException;
+import com.github.zigcat.merchsite_microservice.main.exceptions.RecordNotFoundException;
 import com.github.zigcat.merchsite_microservice.main.security.user.AppUserDetails;
 import com.github.zigcat.merchsite_microservice.main.services.UserService;
 import jakarta.persistence.EntityNotFoundException;
@@ -42,9 +46,9 @@ public class UserController {
     public ResponseEntity<?> getById(@RequestParam Integer id){
         try {
             AppUser user = service.getById(id)
-                    .orElseThrow(() -> new EntityNotFoundException("User not found"));
+                    .orElseThrow(() -> new RecordNotFoundException("User not found"));
             return new ResponseEntity<>(user, HttpStatus.OK);
-        } catch (EntityNotFoundException e){
+        } catch (RecordNotFoundException e){
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         }
     }
@@ -54,7 +58,7 @@ public class UserController {
         try {
             AppUser user = service.register(request);
             return new ResponseEntity<>(user, HttpStatus.CREATED);
-        } catch (DuplicateKeyException e){
+        } catch (RecordAlreadyExistsException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
@@ -64,12 +68,12 @@ public class UserController {
         try {
             JwtResponse response = service.login(request);
             return new ResponseEntity<>(response, HttpStatus.OK);
-        } catch (JsonProcessingException | ExecutionException | InterruptedException | IllegalStateException e) {
+        } catch (JsonProcessingException | ExecutionException | InterruptedException | AuthServerErrorException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        } catch (AuthException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        } catch (EntityNotFoundException e){
+        } catch (RecordNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (AuthenticationErrorException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
     }
 
@@ -79,10 +83,10 @@ public class UserController {
         try {
             AppUser user = service.update(request, userDetails);
             return new ResponseEntity<>(user, HttpStatus.OK);
-        } catch (AuthException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);
-        } catch (EntityNotFoundException e){
+        } catch (RecordNotFoundException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        } catch (AuthenticationErrorException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);
         }
     }
 
@@ -92,10 +96,10 @@ public class UserController {
         try {
             service.delete(id, userDetails);
             return ResponseEntity.ok().build();
-        } catch (AuthException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);
-        } catch (EntityNotFoundException e){
+        } catch (RecordNotFoundException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        } catch (AuthenticationErrorException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);
         }
     }
 }

@@ -3,6 +3,7 @@ package com.github.zigcat.merchsite_microservice.main.security;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.zigcat.merchsite_microservice.main.dto.requests.AuthRequest;
 import com.github.zigcat.merchsite_microservice.main.entity.AppUser;
+import com.github.zigcat.merchsite_microservice.main.exceptions.AuthServerErrorException;
 import com.github.zigcat.merchsite_microservice.main.kafka.KafkaProducerService;
 import com.github.zigcat.merchsite_microservice.main.security.user.AppUserDetails;
 import com.github.zigcat.merchsite_microservice.main.services.jackson.AppDeserializer;
@@ -47,7 +48,7 @@ public class AuthFilter extends OncePerRequestFilter {
                 String requestJson = authRequestSerializer.serialize(authRequest);
                 String responseJson = kafkaProducerService.sendUserForAuth(requestJson);
                 if(responseJson.startsWith("Error ")){
-                    throw new IllegalStateException("Auth server error occurred");
+                    throw new AuthServerErrorException();
                 } else {
                     AppUser user = userDeserializer.deserialize(responseJson);
                     if (user.getEmail() != null) {
@@ -58,7 +59,7 @@ public class AuthFilter extends OncePerRequestFilter {
                 }
             }
             filterChain.doFilter(request, response);
-        } catch (ExecutionException | InterruptedException | IllegalStateException e) {
+        } catch (ExecutionException | InterruptedException | AuthServerErrorException e) {
             log.warn(e.getMessage());
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write(e.getMessage());
