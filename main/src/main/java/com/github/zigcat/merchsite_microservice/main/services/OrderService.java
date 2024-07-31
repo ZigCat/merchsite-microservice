@@ -8,7 +8,9 @@ import com.github.zigcat.merchsite_microservice.main.repositories.OrderRepositor
 import com.github.zigcat.merchsite_microservice.main.security.user.AppUserDetails;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.security.auth.message.AuthException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,30 +19,22 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public class OrderService {
-    private final OrderRepository repository;
+@Slf4j
+public class OrderService extends EntityService<AppOrder>{
+    private final OrderRepository orderRepository;
     private final UserService userService;
 
     @Autowired
     public OrderService(OrderRepository repository,
                         UserService userService) {
-        this.repository = repository;
+        super(repository, AppOrder.class);
+        this.orderRepository = repository;
         this.userService = userService;
     }
 
     @Transactional(isolation = Isolation.READ_COMMITTED, readOnly = true)
     public Optional<AppOrder> getByUser(AppUser user){
-        return Optional.ofNullable(repository.getByUser(user));
-    }
-
-    @Transactional(isolation = Isolation.READ_COMMITTED, readOnly = true)
-    public Optional<AppOrder> getById(Integer id){
-        return repository.findById(id);
-    }
-
-    @Transactional(isolation = Isolation.READ_UNCOMMITTED, readOnly = true)
-    public List<AppOrder> getAll(){
-        return repository.findAll();
+        return orderRepository.findByUser(user);
     }
 
     @Transactional(rollbackFor = {AuthException.class, EntityNotFoundException.class})
@@ -58,12 +52,5 @@ public class OrderService {
         AppUser user = userService.getById(request.getUser())
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
         return repository.save(new AppOrder(user));
-    }
-
-    @Transactional(rollbackFor = {EntityNotFoundException.class})
-    public void delete(Integer id) {
-        AppOrder order = getById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Order not found"));
-        repository.deleteById(id);
     }
 }

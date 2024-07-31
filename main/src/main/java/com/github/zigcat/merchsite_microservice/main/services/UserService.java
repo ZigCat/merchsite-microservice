@@ -30,8 +30,8 @@ import java.util.concurrent.ExecutionException;
 
 @Service
 @Slf4j
-public class UserService {
-    private final UserRepository repository;
+public class UserService extends EntityService<AppUser>{
+    private final UserRepository userRepository;
     private final KafkaProducerService kafkaProducerService;
     private final AppSerializer<JwtRequest> jwtRequestSerializer;
     private final AppDeserializer<JwtResponse> jwtResponseDeserializer;
@@ -43,7 +43,8 @@ public class UserService {
                        AppSerializer<JwtRequest> jwtRequestSerializer,
                        AppDeserializer<JwtResponse> jwtResponseDeserializer,
                        PasswordEncoder encoder) {
-        this.repository = repository;
+        super(repository, AppUser.class);
+        this.userRepository = repository;
         this.kafkaProducerService = kafkaProducerService;
         this.jwtRequestSerializer = jwtRequestSerializer;
         this.jwtResponseDeserializer = jwtResponseDeserializer;
@@ -52,17 +53,7 @@ public class UserService {
 
     @Transactional(isolation = Isolation.READ_COMMITTED, readOnly = true)
     public Optional<AppUser> getByEmail(String email){
-        return Optional.ofNullable(repository.getByEmail(email));
-    }
-
-    @Transactional(isolation = Isolation.READ_COMMITTED, readOnly = true)
-    public Optional<AppUser> getById(Integer id){
-        return repository.findById(id);
-    }
-
-    @Transactional(isolation = Isolation.READ_UNCOMMITTED, readOnly = true)
-    public List<AppUser> getAll(){
-        return repository.findAll();
+        return userRepository.findByEmail(email);
     }
 
     @Transactional(propagation = Propagation.MANDATORY)
