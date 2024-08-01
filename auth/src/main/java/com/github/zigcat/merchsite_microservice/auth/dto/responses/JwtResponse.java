@@ -1,4 +1,4 @@
-package com.github.zigcat.merchsite_microservice.auth.dto;
+package com.github.zigcat.merchsite_microservice.auth.dto.responses;
 
 import com.github.zigcat.merchsite_microservice.auth.entity.AppUser;
 import lombok.*;

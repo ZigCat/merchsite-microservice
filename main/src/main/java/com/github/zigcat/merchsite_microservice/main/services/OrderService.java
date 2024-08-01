@@ -3,6 +3,8 @@ package com.github.zigcat.merchsite_microservice.main.services;
 import com.github.zigcat.merchsite_microservice.main.dto.OrderDTO;
 import com.github.zigcat.merchsite_microservice.main.entity.AppOrder;
 import com.github.zigcat.merchsite_microservice.main.entity.AppUser;
+import com.github.zigcat.merchsite_microservice.main.exceptions.AuthenticationErrorException;
+import com.github.zigcat.merchsite_microservice.main.exceptions.RecordNotFoundException;
 import com.github.zigcat.merchsite_microservice.main.repositories.OrderRepository;
 import com.github.zigcat.merchsite_microservice.main.security.user.AppUserDetails;
 import jakarta.persistence.EntityNotFoundException;
@@ -35,20 +37,20 @@ public class OrderService extends EntityService<AppOrder>{
         return orderRepository.findByUser(user);
     }
 
-    @Transactional(rollbackFor = {AuthException.class, EntityNotFoundException.class})
-    public AppOrder save(OrderDTO request, AppUserDetails userDetails) throws AuthException {
+    @Transactional(rollbackFor = {AuthenticationErrorException.class, RecordNotFoundException.class})
+    public AppOrder save(OrderDTO request, AppUserDetails userDetails) throws RecordNotFoundException, AuthenticationErrorException {
         AppUser user = userService.getById(request.getUser())
-                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+                .orElseThrow(() -> new RecordNotFoundException("User"));
         if(userDetails.getUsername().equals(user.getEmail())){
             return repository.save(new AppOrder(user));
         }
-        throw new AuthException("Unauthorized access to order");
+        throw new AuthenticationErrorException("Order");
     }
 
-    @Transactional(rollbackFor = {EntityNotFoundException.class})
-    public AppOrder update(OrderDTO request) {
+    @Transactional(rollbackFor = {RecordNotFoundException.class})
+    public AppOrder update(OrderDTO request) throws RecordNotFoundException {
         AppUser user = userService.getById(request.getUser())
-                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+                .orElseThrow(() -> new RecordNotFoundException("User"));
         return repository.save(new AppOrder(user));
     }
 }

@@ -1,6 +1,7 @@
 package com.github.zigcat.merchsite_microservice.auth.security.jwt;
 
 import com.github.zigcat.merchsite_microservice.auth.entity.AppUser;
+import com.github.zigcat.merchsite_microservice.auth.exceptions.WrongJwtException;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.Claims;
@@ -57,7 +58,7 @@ public class JwtProvider {
                 .compact();
     }
 
-    private boolean validateToken(@NonNull String token, SecretKey secret){
+    private boolean validateToken(@NonNull String token, SecretKey secret) throws WrongJwtException {
         try{
             Jwts.parserBuilder()
                     .setSigningKey(secret)
@@ -66,16 +67,20 @@ public class JwtProvider {
             return true;
         }  catch (ExpiredJwtException e) {
             log.error("Token expired");
+            throw new WrongJwtException(e.getMessage());
         } catch (UnsupportedJwtException e) {
             log.error("Unsupported jwt");
+            throw new WrongJwtException(e.getMessage());
         } catch (MalformedJwtException e) {
             log.error("Malformed jwt");
+            throw new WrongJwtException(e.getMessage());
         } catch (SignatureException e) {
             log.error("Invalid signature");
+            throw new WrongJwtException(e.getMessage());
         } catch (Exception e) {
             log.error("invalid token");
+            throw new WrongJwtException(e.getMessage());
         }
-        return false;
     }
 
     private Claims getClaims(@NonNull String token, SecretKey key){
@@ -86,11 +91,11 @@ public class JwtProvider {
                 .getBody();
     }
 
-    public boolean validateAccessToken(@NonNull String token){
+    public boolean validateAccessToken(@NonNull String token) throws WrongJwtException {
         return validateToken(token, jwtAccessSecret);
     }
 
-    public boolean validateRefreshToken(@NonNull String token){
+    public boolean validateRefreshToken(@NonNull String token) throws WrongJwtException {
         return validateToken(token, jwtRefreshSecret);
     }
 

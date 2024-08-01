@@ -2,6 +2,8 @@ package com.github.zigcat.merchsite_microservice.main.controllers;
 
 import com.github.zigcat.merchsite_microservice.main.dto.OrderDTO;
 import com.github.zigcat.merchsite_microservice.main.entity.AppOrder;
+import com.github.zigcat.merchsite_microservice.main.exceptions.AuthenticationErrorException;
+import com.github.zigcat.merchsite_microservice.main.exceptions.RecordNotFoundException;
 import com.github.zigcat.merchsite_microservice.main.security.user.AppUserDetails;
 import com.github.zigcat.merchsite_microservice.main.services.OrderService;
 import jakarta.persistence.EntityNotFoundException;
@@ -36,9 +38,9 @@ public class OrderController {
     public ResponseEntity<?> getById(@RequestParam Integer id){
         try{
             AppOrder order = service.getById(id)
-                    .orElseThrow(() -> new EntityNotFoundException("User not found"));
+                    .orElseThrow(() -> new RecordNotFoundException("User"));
             return new ResponseEntity<>(order, HttpStatus.OK);
-        } catch (EntityNotFoundException e){
+        } catch (RecordNotFoundException e){
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         }
     }
@@ -49,10 +51,10 @@ public class OrderController {
         try {
             AppOrder order = service.save(request, userDetails);
             return new ResponseEntity<>(order, HttpStatus.CREATED);
-        } catch (AuthException e){
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);
-        } catch (EntityNotFoundException e){
+        } catch (RecordNotFoundException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        } catch (AuthenticationErrorException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);
         }
     }
 
@@ -61,7 +63,7 @@ public class OrderController {
         try {
             AppOrder order = service.update(request);
             return new ResponseEntity<>(order, HttpStatus.OK);
-        } catch (EntityNotFoundException e){
+        } catch (RecordNotFoundException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         }
     }
@@ -72,7 +74,7 @@ public class OrderController {
             log.info("DELETING ORDER");
             service.delete(id);
             return new ResponseEntity<>(HttpStatus.OK);
-        } catch (EntityNotFoundException e){
+        } catch (RecordNotFoundException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         }
     }

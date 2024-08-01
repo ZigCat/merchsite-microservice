@@ -6,6 +6,7 @@ import com.github.zigcat.merchsite_microservice.main.dto.responses.JwtResponse;
 import com.github.zigcat.merchsite_microservice.main.dto.UserDTO;
 import com.github.zigcat.merchsite_microservice.main.entity.enums.Role;
 import com.github.zigcat.merchsite_microservice.main.entity.AppUser;
+import com.github.zigcat.merchsite_microservice.main.exceptions.*;
 import com.github.zigcat.merchsite_microservice.main.kafka.KafkaProducerService;
 import com.github.zigcat.merchsite_microservice.main.repositories.UserRepository;
 import com.github.zigcat.merchsite_microservice.main.security.user.AppUserDetails;
@@ -24,7 +25,6 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
@@ -67,39 +67,53 @@ public class UserService extends EntityService<AppUser>{
                 LocalDate.now()));
     }
 
-    @Transactional(rollbackFor = DuplicateKeyException.class)
-    public AppUser register(UserDTO request) {
+    @Transactional(rollbackFor = RecordAlreadyExistsException.class)
+    public AppUser register(UserDTO request) throws RecordAlreadyExistsException {
         if(getByEmail(request.getEmail()).isEmpty()){
             return save(request);
         }
-        throw new DuplicateKeyException("User with the same email already exists in database");
+        throw new RecordAlreadyExistsException("User");
     }
 
-    public JwtResponse login(JwtRequest request) throws JsonProcessingException, ExecutionException, InterruptedException {
-        String requestJson = jwtRequestSerializer.serialize(request);
-        String responseJson = kafkaProducerService.sendUserForLogin(requestJson);
-        return jwtResponseDeserializer.deserialize(responseJson);
+    public JwtResponse login(JwtRequest request) throws RecordNotFoundException, AuthenticationErrorException, AuthServerErrorException, InternalServerErrorException {
+        try{
+            String requestJson = jwtRequestSerializer.serialize(request);
+            String responseJson = kafkaProducerService.sendUserForLogin(requestJson);
+            if(responseJson.startsWith("Error ")){
+                switch(responseJson.substring(6)){
+                    case "404":
+                        throw new RecordNotFoundException("User");
+                    case "401":
+                        throw new AuthenticationErrorException("User");
+                    default:
+                        throw new AuthServerErrorException();
+                }
+            }
+            return jwtResponseDeserializer.deserialize(responseJson);
+        } catch (JsonProcessingException e){
+            throw new InternalServerErrorException();
+        }
     }
 
-    @Transactional(rollbackFor = {AuthException.class, EntityNotFoundException.class})
-    public AppUser update(UserDTO request, AppUserDetails userDetails) throws AuthException {
+    @Transactional(rollbackFor = {AuthenticationErrorException.class, RecordNotFoundException.class})
+    public AppUser update(UserDTO request, AppUserDetails userDetails) throws RecordNotFoundException, AuthenticationErrorException {
         AppUser user = getByEmail(request.getEmail())
-                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+                .orElseThrow(() -> new RecordNotFoundException("User"));
         if(user.getEmail().equals(userDetails.getUsername())){
             return save(request);
         }
-        throw new AuthException("Unauthorized access to user");
+        throw new AuthenticationErrorException("User");
     }
 
-    @Transactional(rollbackFor = {AuthException.class, EntityNotFoundException.class})
-    public void delete(Integer id, AppUserDetails userDetails) throws AuthException {
+    @Transactional(rollbackFor = {AuthenticationErrorException.class, RecordNotFoundException.class})
+    public void delete(Integer id, AppUserDetails userDetails) throws RecordNotFoundException, AuthenticationErrorException {
         AppUser user = getById(id)
-                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+                .orElseThrow(() -> new RecordNotFoundException("User"));
         if(user.getEmail().equals(userDetails.getUsername())
                 || userDetails.getUser().getRole().equals(Role.ADMIN)){
             repository.deleteById(id);
         } else {
-            throw new AuthException("Unauthorized access to user");
+            throw new AuthenticationErrorException("User");
         }
     }
 }

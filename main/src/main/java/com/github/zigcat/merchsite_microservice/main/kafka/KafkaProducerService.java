@@ -1,11 +1,13 @@
 package com.github.zigcat.merchsite_microservice.main.kafka;
 
+import com.github.zigcat.merchsite_microservice.main.exceptions.AuthServerErrorException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.header.internals.RecordHeader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.requestreply.KafkaReplyTimeoutException;
 import org.springframework.kafka.requestreply.ReplyingKafkaTemplate;
 import org.springframework.kafka.requestreply.RequestReplyFuture;
 import org.springframework.kafka.support.KafkaHeaders;
@@ -26,23 +28,41 @@ public class KafkaProducerService {
         this.loginTemplate = loginTemplate;
     }
 
-    public String sendUserForLogin(String userJson) throws ExecutionException, InterruptedException {
+    public String sendUserForLogin(String userJson) throws AuthServerErrorException {
+        log.info("Performing LOGIN request to AUTH server");
         String LOGIN_REQUEST_TOPIC = "login-request";
         String LOGIN_REPLY_TOPIC = "login-reply";
+        log.info("Building ProducerRecord...");
         ProducerRecord<String, String> record = new ProducerRecord<>(LOGIN_REQUEST_TOPIC, userJson);
         record.headers().add(new RecordHeader(KafkaHeaders.REPLY_TOPIC, LOGIN_REPLY_TOPIC.getBytes()));
+        log.info("Sending request to AUTH server...");
         RequestReplyFuture<String, String, String> replyFuture = loginTemplate.sendAndReceive(record);
-        ConsumerRecord<String, String> consumerRecord = replyFuture.get();
-        return consumerRecord.value();
+        try{
+            ConsumerRecord<String, String> consumerRecord = replyFuture.get();
+            log.warn("Response from AUTH server is received");
+            return consumerRecord.value();
+        } catch(ExecutionException | InterruptedException | KafkaReplyTimeoutException e){
+            log.error(e.getMessage());
+            throw new AuthServerErrorException();
+        }
     }
 
-    public String sendUserForAuth(String tokenJson) throws ExecutionException, InterruptedException {
+    public String sendUserForAuth(String tokenJson) throws AuthServerErrorException {
+        log.info("Performing AUTH request to AUTH server");
         String AUTH_REQUEST_TOPIC = "auth-request";
         String AUTH_REPLY_TOPIC = "auth-reply";
+        log.info("Building ProducerRecord...");
         ProducerRecord<String, String> record = new ProducerRecord<>(AUTH_REQUEST_TOPIC, tokenJson);
         record.headers().add(new RecordHeader(KafkaHeaders.REPLY_TOPIC, AUTH_REPLY_TOPIC.getBytes()));
+        log.info("Sending request to AUTH server...");
         RequestReplyFuture<String, String, String> replyFuture = authTemplate.sendAndReceive(record);
-        ConsumerRecord<String, String> consumerRecord = replyFuture.get();
-        return consumerRecord.value();
+        try{
+            ConsumerRecord<String, String> consumerRecord = replyFuture.get();
+            log.warn("Response from AUTH server is received");
+            return consumerRecord.value();
+        } catch(ExecutionException | InterruptedException | KafkaReplyTimeoutException e){
+            log.error(e.getMessage());
+            throw new AuthServerErrorException();
+        }
     }
 }
