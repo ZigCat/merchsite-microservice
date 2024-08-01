@@ -33,14 +33,18 @@ public class AuthService {
 
     @Transactional(isolation = Isolation.REPEATABLE_READ)
     public JwtResponse login(@NonNull JwtRequest request) throws AuthException, EntityNotFoundException {
+        log.info("Getting User by email...");
         final AppUser user = service.getByEmail(request.getEmail())
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
+        log.info("User received, checking password...");
         if (service.getEncoder().matches(request.getPassword(), user.getPassword())) {
+            log.info("Passwords match, generating tokens");
             final String accessToken = jwtProvider.generateAccessToken(user);
             final String refreshToken = jwtProvider.generateRefreshToken(user);
             refreshStorage.put(user.getEmail(), refreshToken);
             return new JwtResponse(accessToken, refreshToken, user);
         } else {
+            log.warn("Passwords doesn't match");
             throw new AuthException("Wrong password");
         }
     }

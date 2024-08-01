@@ -6,12 +6,14 @@ import com.github.zigcat.merchsite_microservice.auth.dto.requests.JwtRequest;
 import com.github.zigcat.merchsite_microservice.auth.dto.responses.JwtResponse;
 import com.github.zigcat.merchsite_microservice.auth.entity.AppUser;
 import com.github.zigcat.merchsite_microservice.auth.security.jwt.JwtProvider;
+import com.github.zigcat.merchsite_microservice.auth.security.jwt.TokenType;
 import com.github.zigcat.merchsite_microservice.auth.services.AuthService;
 import com.github.zigcat.merchsite_microservice.auth.services.UserService;
 import com.github.zigcat.merchsite_microservice.auth.services.jackson.AppDeserializer;
 import com.github.zigcat.merchsite_microservice.auth.services.jackson.AppSerializer;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.security.auth.message.AuthException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -20,7 +22,10 @@ import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+
 @Service
+@Slf4j
 public class KafkaConsumerService {
     private final AuthService service;
     private final UserService userService;
@@ -53,18 +58,29 @@ public class KafkaConsumerService {
     @KafkaListener(topics = "login-request", containerFactory = "containerFactory")
     @SendTo
     public String listenAndLogin(String json, @Header(KafkaHeaders.REPLY_TOPIC) String replyTopic){
+        log.info("----------------------");
+        log.info("Received LOGIN request");
         try {
+            log.info("Deserializing JwtRequest...");
             JwtRequest request = jwtRequestDeserializer.deserialize(json);
+            log.info("Performing login method...");
             JwtResponse response = service.login(request);
+            log.info("Serializing and sending JwtResponse to MAIN server");
             return jwtResponseSerializer.serialize(response);
         } catch (JsonProcessingException e) {
-            kafkaTemplate.send("auth-error", "500: "+e.getMessage());
+            log.warn(e.getMessage());
+            kafkaTemplate.send("auth-error",
+                    LocalDateTime.now().toString()+" 500: "+e.getMessage());
             return "Error 500";
         } catch (AuthException e) {
-            kafkaTemplate.send("auth-error", "401: "+e.getMessage());
+            log.warn(e.getMessage());
+            kafkaTemplate.send("auth-error",
+                    LocalDateTime.now().toString()+" 401: "+e.getMessage());
             return "Error 401";
         } catch (EntityNotFoundException e){
-            kafkaTemplate.send("auth-error", "404: "+e.getMessage());
+            log.warn(e.getMessage());
+            kafkaTemplate.send("auth-error",
+                    LocalDateTime.now().toString()+" 404: "+e.getMessage());
             return "Error 404";
         }
     }
@@ -72,18 +88,33 @@ public class KafkaConsumerService {
     @KafkaListener(topics = "auth-request", containerFactory = "containerFactory")
     @SendTo
     public String listenAndAuthorize(String json, @Header(KafkaHeaders.REPLY_TOPIC) String replyTopic){
+        log.info("----------------------");
+        log.info("Received AUTH request");
         try {
+            log.info("Deserializing AuthRequest...");
             AuthRequest request = authRequestDeserializer.deserialize(json);
-            if(provider.validateAccessToken(request.getToken())){
+            log.info("Checking token validity...");
+            if(service.validateToken(request.getToken(), TokenType.ACCESS)){
+                log.info("Token is valid, getting User from subject...");
                 AppUser user = userService.getByEmail(
-                        provider.getAccessSubject(request.getToken())).get();
+                        provider.getAccessSubject(request.getToken()))
+                        .orElseThrow(() -> new EntityNotFoundException("User not found"));
+                log.info("User is present, sending User to MAIN server");
                 return userSerializer.serialize(user);
             } else {
+                log.info("Token is invalid, returning null User");
                 return userSerializer.serialize(new AppUser());
             }
         } catch (JsonProcessingException e) {
-            kafkaTemplate.send("auth-error", "500: "+e.getMessage());
+            log.warn(e.getMessage());
+            kafkaTemplate.send("auth-error",
+                    LocalDateTime.now()+" 500: "+e.getMessage());
             return "Error 500";
+        } catch (EntityNotFoundException e){
+            log.warn(e.getMessage());
+            kafkaTemplate.send("auth-error",
+                    LocalDateTime.now()+" 404: "+e.getMessage());
+            return "Error 404";
         }
     }
 }

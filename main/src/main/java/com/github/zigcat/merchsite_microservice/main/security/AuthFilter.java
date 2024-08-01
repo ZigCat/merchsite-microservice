@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.zigcat.merchsite_microservice.main.dto.requests.AuthRequest;
 import com.github.zigcat.merchsite_microservice.main.entity.AppUser;
 import com.github.zigcat.merchsite_microservice.main.exceptions.AuthServerErrorException;
+import com.github.zigcat.merchsite_microservice.main.exceptions.RecordNotFoundException;
 import com.github.zigcat.merchsite_microservice.main.kafka.KafkaProducerService;
 import com.github.zigcat.merchsite_microservice.main.security.user.AppUserDetails;
 import com.github.zigcat.merchsite_microservice.main.services.jackson.AppDeserializer;
@@ -42,6 +43,7 @@ public class AuthFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws IOException, ServletException {
+        log.info("----------------------");
         log.info("AuthFilter initiated");
         String bearer = request.getHeader("Authorization");
         try {
@@ -55,8 +57,13 @@ public class AuthFilter extends OncePerRequestFilter {
                 String responseJson = kafkaProducerService.sendUserForAuth(requestJson);
                 log.info("Receiving User from AUTH server");
                 if(responseJson.startsWith("Error ")){
-                    log.warn("Received AUTH server error");
-                    throw new AuthServerErrorException();
+                    if(responseJson.substring(6).equals("404")){
+                        log.warn("Received NOT FOUND from AUTH server");
+                        throw new RecordNotFoundException("User");
+                    } else {
+                        log.warn("Received AUTH server error");
+                        throw new AuthServerErrorException();
+                    }
                 } else {
                     log.info("Deserializing User");
                     AppUser user = userDeserializer.deserialize(responseJson);
@@ -76,9 +83,14 @@ public class AuthFilter extends OncePerRequestFilter {
             log.info("Passing filterChain");
             filterChain.doFilter(request, response);
         } catch (AuthServerErrorException e) {
-            log.warn("AUTH server error occured");
+            log.warn("AUTH server error occurred");
             log.warn(e.getMessage());
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.getWriter().write(e.getMessage());
+        } catch (RecordNotFoundException e) {
+            log.warn("AUTH server can't find user");
+            log.warn(e.getMessage());
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
             response.getWriter().write(e.getMessage());
         }
     }
