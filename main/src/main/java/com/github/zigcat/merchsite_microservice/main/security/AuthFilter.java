@@ -42,25 +42,41 @@ public class AuthFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws IOException, ServletException {
+        log.info("AuthFilter initiated");
         String bearer = request.getHeader("Authorization");
         try {
+            log.info("Checking token type");
             if(bearer != null && bearer.startsWith("Bearer ")) {
+                log.info("Token type accepted by filter");
                 AuthRequest authRequest = new AuthRequest(bearer.substring(7));
+                log.info("Serializing AuthRequest");
                 String requestJson = authRequestSerializer.serialize(authRequest);
+                log.info("Sending AuthRequest to AUTH server");
                 String responseJson = kafkaProducerService.sendUserForAuth(requestJson);
+                log.info("Receiving User from AUTH server");
                 if(responseJson.startsWith("Error ")){
+                    log.warn("Received AUTH server error");
                     throw new AuthServerErrorException();
                 } else {
+                    log.info("Deserializing User");
                     AppUser user = userDeserializer.deserialize(responseJson);
+                    log.info("Checking whether User null or not");
                     if (user.getEmail() != null) {
+                        log.info("User is present, authorizing request");
                         AppUserDetails userDetails = new AppUserDetails(user);
                         Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                         SecurityContextHolder.getContext().setAuthentication(authentication);
+                    } else {
+                        log.info("User null, request authorizing rejected");
                     }
                 }
+            } else {
+                log.info("Token type invalid or absent");
             }
+            log.info("Passing filterChain");
             filterChain.doFilter(request, response);
-        } catch ( AuthServerErrorException e) {
+        } catch (AuthServerErrorException e) {
+            log.warn("AUTH server error occured");
             log.warn(e.getMessage());
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write(e.getMessage());
