@@ -38,9 +38,9 @@ public class OrderController {
     public ResponseEntity<?> getById(@RequestParam Integer id){
         try{
             AppOrder order = service.getById(id)
-                    .orElseThrow(() -> new EntityNotFoundException("User not found"));
+                    .orElseThrow(() -> new RecordNotFoundException("User"));
             return new ResponseEntity<>(order, HttpStatus.OK);
-        } catch (EntityNotFoundException e){
+        } catch (RecordNotFoundException e){
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         }
     }

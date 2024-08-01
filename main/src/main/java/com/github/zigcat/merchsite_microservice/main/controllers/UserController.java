@@ -5,10 +5,7 @@ import com.github.zigcat.merchsite_microservice.main.dto.requests.JwtRequest;
 import com.github.zigcat.merchsite_microservice.main.dto.responses.JwtResponse;
 import com.github.zigcat.merchsite_microservice.main.dto.UserDTO;
 import com.github.zigcat.merchsite_microservice.main.entity.AppUser;
-import com.github.zigcat.merchsite_microservice.main.exceptions.AuthServerErrorException;
-import com.github.zigcat.merchsite_microservice.main.exceptions.AuthenticationErrorException;
-import com.github.zigcat.merchsite_microservice.main.exceptions.RecordAlreadyExistsException;
-import com.github.zigcat.merchsite_microservice.main.exceptions.RecordNotFoundException;
+import com.github.zigcat.merchsite_microservice.main.exceptions.*;
 import com.github.zigcat.merchsite_microservice.main.security.user.AppUserDetails;
 import com.github.zigcat.merchsite_microservice.main.services.UserService;
 import jakarta.persistence.EntityNotFoundException;
@@ -54,26 +51,26 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<AppUser> register(@RequestBody UserDTO request){
+    public ResponseEntity<?> register(@RequestBody UserDTO request){
         try {
             AppUser user = service.register(request);
             return new ResponseEntity<>(user, HttpStatus.CREATED);
         } catch (RecordAlreadyExistsException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }
 
     @PostMapping("/login")
-    public ResponseEntity<JwtResponse> login(@RequestBody JwtRequest request){
+    public ResponseEntity<?> login(@RequestBody JwtRequest request){
         try {
             JwtResponse response = service.login(request);
             return new ResponseEntity<>(response, HttpStatus.OK);
-        } catch (JsonProcessingException | ExecutionException | InterruptedException | AuthServerErrorException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        } catch (AuthServerErrorException | InternalServerErrorException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (RecordNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         } catch (AuthenticationErrorException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);
         }
     }
 

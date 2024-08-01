@@ -6,10 +6,7 @@ import com.github.zigcat.merchsite_microservice.main.dto.responses.JwtResponse;
 import com.github.zigcat.merchsite_microservice.main.dto.UserDTO;
 import com.github.zigcat.merchsite_microservice.main.entity.enums.Role;
 import com.github.zigcat.merchsite_microservice.main.entity.AppUser;
-import com.github.zigcat.merchsite_microservice.main.exceptions.AuthServerErrorException;
-import com.github.zigcat.merchsite_microservice.main.exceptions.AuthenticationErrorException;
-import com.github.zigcat.merchsite_microservice.main.exceptions.RecordAlreadyExistsException;
-import com.github.zigcat.merchsite_microservice.main.exceptions.RecordNotFoundException;
+import com.github.zigcat.merchsite_microservice.main.exceptions.*;
 import com.github.zigcat.merchsite_microservice.main.kafka.KafkaProducerService;
 import com.github.zigcat.merchsite_microservice.main.repositories.UserRepository;
 import com.github.zigcat.merchsite_microservice.main.security.user.AppUserDetails;
@@ -78,20 +75,24 @@ public class UserService extends EntityService<AppUser>{
         throw new RecordAlreadyExistsException("User");
     }
 
-    public JwtResponse login(JwtRequest request) throws JsonProcessingException, ExecutionException, InterruptedException, RecordNotFoundException, AuthenticationErrorException, AuthServerErrorException {
-        String requestJson = jwtRequestSerializer.serialize(request);
-        String responseJson = kafkaProducerService.sendUserForLogin(requestJson);
-        if(responseJson.startsWith("Error ")){
-            switch(responseJson.substring(6)){
-                case "404":
-                    throw new RecordNotFoundException("User");
-                case "401":
-                    throw new AuthenticationErrorException("User");
-                default:
-                    throw new AuthServerErrorException();
+    public JwtResponse login(JwtRequest request) throws RecordNotFoundException, AuthenticationErrorException, AuthServerErrorException, InternalServerErrorException {
+        try{
+            String requestJson = jwtRequestSerializer.serialize(request);
+            String responseJson = kafkaProducerService.sendUserForLogin(requestJson);
+            if(responseJson.startsWith("Error ")){
+                switch(responseJson.substring(6)){
+                    case "404":
+                        throw new RecordNotFoundException("User");
+                    case "401":
+                        throw new AuthenticationErrorException("User");
+                    default:
+                        throw new AuthServerErrorException();
+                }
             }
+            return jwtResponseDeserializer.deserialize(responseJson);
+        } catch (JsonProcessingException e){
+            throw new InternalServerErrorException();
         }
-        return jwtResponseDeserializer.deserialize(responseJson);
     }
 
     @Transactional(rollbackFor = {AuthenticationErrorException.class, RecordNotFoundException.class})
