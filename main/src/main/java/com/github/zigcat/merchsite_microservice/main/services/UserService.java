@@ -70,7 +70,7 @@ public class UserService extends EntityService<AppUser>{
                 LocalDate.now()));
     }
 
-    @Transactional(rollbackFor = DuplicateKeyException.class)
+    @Transactional(rollbackFor = RecordAlreadyExistsException.class)
     public AppUser register(UserDTO request) throws RecordAlreadyExistsException {
         if(getByEmail(request.getEmail()).isEmpty()){
             return save(request);
@@ -94,7 +94,7 @@ public class UserService extends EntityService<AppUser>{
         return jwtResponseDeserializer.deserialize(responseJson);
     }
 
-    @Transactional(rollbackFor = {AuthException.class, EntityNotFoundException.class})
+    @Transactional(rollbackFor = {AuthenticationErrorException.class, RecordNotFoundException.class})
     public AppUser update(UserDTO request, AppUserDetails userDetails) throws RecordNotFoundException, AuthenticationErrorException {
         AppUser user = getByEmail(request.getEmail())
                 .orElseThrow(() -> new RecordNotFoundException("User"));
