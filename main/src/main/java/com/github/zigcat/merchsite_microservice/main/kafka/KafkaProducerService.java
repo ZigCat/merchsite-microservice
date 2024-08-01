@@ -35,15 +35,14 @@ public class KafkaProducerService {
         log.info("Building ProducerRecord...");
         ProducerRecord<String, String> record = new ProducerRecord<>(LOGIN_REQUEST_TOPIC, userJson);
         record.headers().add(new RecordHeader(KafkaHeaders.REPLY_TOPIC, LOGIN_REPLY_TOPIC.getBytes()));
-        log.info("Sending request to AUTH server");
+        log.info("Sending request to AUTH server...");
         RequestReplyFuture<String, String, String> replyFuture = loginTemplate.sendAndReceive(record);
         try{
             ConsumerRecord<String, String> consumerRecord = replyFuture.get();
-            log.info("Response from AUTH server is received");
+            log.warn("Response from AUTH server is received");
             return consumerRecord.value();
         } catch(ExecutionException | InterruptedException | KafkaReplyTimeoutException e){
-            log.warn("AUTH server error occured");
-            log.warn(e.getMessage());
+            log.error(e.getMessage());
             throw new AuthServerErrorException();
         }
     }
@@ -55,15 +54,14 @@ public class KafkaProducerService {
         log.info("Building ProducerRecord...");
         ProducerRecord<String, String> record = new ProducerRecord<>(AUTH_REQUEST_TOPIC, tokenJson);
         record.headers().add(new RecordHeader(KafkaHeaders.REPLY_TOPIC, AUTH_REPLY_TOPIC.getBytes()));
-        log.info("Sending request to AUTH server");
+        log.info("Sending request to AUTH server...");
         RequestReplyFuture<String, String, String> replyFuture = authTemplate.sendAndReceive(record);
         try{
             ConsumerRecord<String, String> consumerRecord = replyFuture.get();
-            log.info("Response from AUTH server is received");
+            log.warn("Response from AUTH server is received");
             return consumerRecord.value();
         } catch(ExecutionException | InterruptedException | KafkaReplyTimeoutException e){
-            log.warn("AUTH server error occured");
-            log.warn(e.getMessage());
+            log.error(e.getMessage());
             throw new AuthServerErrorException();
         }
     }

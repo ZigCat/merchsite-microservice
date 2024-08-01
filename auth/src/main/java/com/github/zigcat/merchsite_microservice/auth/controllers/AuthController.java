@@ -2,6 +2,9 @@ package com.github.zigcat.merchsite_microservice.auth.controllers;
 
 import com.github.zigcat.merchsite_microservice.auth.dto.requests.JwtRequest;
 import com.github.zigcat.merchsite_microservice.auth.dto.responses.JwtResponse;
+import com.github.zigcat.merchsite_microservice.auth.exceptions.RecordNotFoundException;
+import com.github.zigcat.merchsite_microservice.auth.exceptions.WrongJwtException;
+import com.github.zigcat.merchsite_microservice.auth.exceptions.WrongPasswordException;
 import com.github.zigcat.merchsite_microservice.auth.security.jwt.TokenType;
 import com.github.zigcat.merchsite_microservice.auth.services.AuthService;
 import jakarta.persistence.EntityNotFoundException;
@@ -29,9 +32,9 @@ public class AuthController {
         try {
             JwtResponse response = service.login(request);
             return new ResponseEntity<>(response, HttpStatus.OK);
-        } catch (AuthException e) {
+        } catch (WrongPasswordException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        } catch (EntityNotFoundException e){
+        } catch (RecordNotFoundException e){
             return ResponseEntity.notFound().build();
         }
     }
@@ -39,10 +42,11 @@ public class AuthController {
     @GetMapping("/validate")
     public ResponseEntity<?> validateToken(@RequestParam String token,
                                            @RequestParam TokenType type){
-        boolean isValid = service.validateToken(token, type);
-        if(isValid){
+        boolean isValid = false;
+        try {
+            service.validateToken(token, type);
             return ResponseEntity.ok().build();
-        } else {
+        } catch (WrongJwtException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
     }
@@ -52,7 +56,7 @@ public class AuthController {
         try {
             JwtResponse response = service.getRefreshToken(token);
             return new ResponseEntity<>(response, HttpStatus.OK);
-        } catch (AuthException e) {
+        } catch (WrongJwtException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         } catch (NoSuchElementException e){
             return ResponseEntity.notFound().build();

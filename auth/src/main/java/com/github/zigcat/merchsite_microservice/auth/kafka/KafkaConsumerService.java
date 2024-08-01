@@ -5,6 +5,9 @@ import com.github.zigcat.merchsite_microservice.auth.dto.requests.AuthRequest;
 import com.github.zigcat.merchsite_microservice.auth.dto.requests.JwtRequest;
 import com.github.zigcat.merchsite_microservice.auth.dto.responses.JwtResponse;
 import com.github.zigcat.merchsite_microservice.auth.entity.AppUser;
+import com.github.zigcat.merchsite_microservice.auth.exceptions.RecordNotFoundException;
+import com.github.zigcat.merchsite_microservice.auth.exceptions.WrongJwtException;
+import com.github.zigcat.merchsite_microservice.auth.exceptions.WrongPasswordException;
 import com.github.zigcat.merchsite_microservice.auth.security.jwt.JwtProvider;
 import com.github.zigcat.merchsite_microservice.auth.security.jwt.TokenType;
 import com.github.zigcat.merchsite_microservice.auth.services.AuthService;
@@ -65,20 +68,20 @@ public class KafkaConsumerService {
             JwtRequest request = jwtRequestDeserializer.deserialize(json);
             log.info("Performing login method...");
             JwtResponse response = service.login(request);
-            log.info("Serializing and sending JwtResponse to MAIN server");
+            log.warn("Serializing and sending JwtResponse to MAIN server");
             return jwtResponseSerializer.serialize(response);
         } catch (JsonProcessingException e) {
-            log.warn(e.getMessage());
+            log.error(e.getMessage());
             kafkaTemplate.send("auth-error",
                     LocalDateTime.now().toString()+" 500: "+e.getMessage());
             return "Error 500";
-        } catch (AuthException e) {
-            log.warn(e.getMessage());
+        } catch (WrongPasswordException e) {
+            log.error(e.getMessage());
             kafkaTemplate.send("auth-error",
                     LocalDateTime.now().toString()+" 401: "+e.getMessage());
             return "Error 401";
-        } catch (EntityNotFoundException e){
-            log.warn(e.getMessage());
+        } catch (RecordNotFoundException e){
+            log.error(e.getMessage());
             kafkaTemplate.send("auth-error",
                     LocalDateTime.now().toString()+" 404: "+e.getMessage());
             return "Error 404";
@@ -98,23 +101,23 @@ public class KafkaConsumerService {
                 log.info("Token is valid, getting User from subject...");
                 AppUser user = userService.getByEmail(
                         provider.getAccessSubject(request.getToken()))
-                        .orElseThrow(() -> new EntityNotFoundException("User not found"));
-                log.info("User is present, sending User to MAIN server");
+                        .orElseThrow(WrongJwtException::new);
+                log.warn("User is present, sending User to MAIN server");
                 return userSerializer.serialize(user);
             } else {
-                log.info("Token is invalid, returning null User");
+                log.warn("Token is invalid, returning null User");
                 return userSerializer.serialize(new AppUser());
             }
         } catch (JsonProcessingException e) {
-            log.warn(e.getMessage());
+            log.error(e.getMessage());
             kafkaTemplate.send("auth-error",
                     LocalDateTime.now()+" 500: "+e.getMessage());
             return "Error 500";
-        } catch (EntityNotFoundException e){
-            log.warn(e.getMessage());
+        } catch (WrongJwtException e){
+            log.error(e.getMessage());
             kafkaTemplate.send("auth-error",
-                    LocalDateTime.now()+" 404: "+e.getMessage());
-            return "Error 404";
+                    LocalDateTime.now()+" 401: "+e.getMessage());
+            return "Error 401";
         }
     }
 }

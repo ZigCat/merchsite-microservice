@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.zigcat.merchsite_microservice.main.dto.requests.AuthRequest;
 import com.github.zigcat.merchsite_microservice.main.entity.AppUser;
 import com.github.zigcat.merchsite_microservice.main.exceptions.AuthServerErrorException;
+import com.github.zigcat.merchsite_microservice.main.exceptions.AuthenticationErrorException;
 import com.github.zigcat.merchsite_microservice.main.exceptions.RecordNotFoundException;
 import com.github.zigcat.merchsite_microservice.main.kafka.KafkaProducerService;
 import com.github.zigcat.merchsite_microservice.main.security.user.AppUserDetails;
@@ -22,6 +23,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import javax.security.sasl.AuthenticationException;
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 
@@ -47,50 +49,48 @@ public class AuthFilter extends OncePerRequestFilter {
         log.info("AuthFilter initiated");
         String bearer = request.getHeader("Authorization");
         try {
-            log.info("Checking token type");
+            log.info("Checking token type...");
             if(bearer != null && bearer.startsWith("Bearer ")) {
                 log.info("Token type accepted by filter");
                 AuthRequest authRequest = new AuthRequest(bearer.substring(7));
-                log.info("Serializing AuthRequest");
+                log.info("Serializing AuthRequest...");
                 String requestJson = authRequestSerializer.serialize(authRequest);
-                log.info("Sending AuthRequest to AUTH server");
+                log.info("Sending AuthRequest to AUTH server...");
                 String responseJson = kafkaProducerService.sendUserForAuth(requestJson);
-                log.info("Receiving User from AUTH server");
+                log.info("Received User from AUTH server");
+                log.info("Checking errors...");
                 if(responseJson.startsWith("Error ")){
-                    if(responseJson.substring(6).equals("404")){
-                        log.warn("Received NOT FOUND from AUTH server");
-                        throw new RecordNotFoundException("User");
+                    if(responseJson.substring(6).equals("401")){
+                        throw new AuthenticationErrorException("User");
                     } else {
-                        log.warn("Received AUTH server error");
                         throw new AuthServerErrorException();
                     }
                 } else {
-                    log.info("Deserializing User");
+                    log.info("Errors not found");
+                    log.info("Deserializing User...");
                     AppUser user = userDeserializer.deserialize(responseJson);
-                    log.info("Checking whether User null or not");
+                    log.info("Checking whether User null or not...");
                     if (user.getEmail() != null) {
-                        log.info("User is present, authorizing request");
+                        log.warn("User is present, authorizing request");
                         AppUserDetails userDetails = new AppUserDetails(user);
                         Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                         SecurityContextHolder.getContext().setAuthentication(authentication);
                     } else {
-                        log.info("User null, request authorizing rejected");
+                        log.warn("User null, request authorizing rejected");
                     }
                 }
             } else {
-                log.info("Token type invalid or absent");
+                log.warn("Token type invalid or absent");
             }
-            log.info("Passing filterChain");
+            log.warn("Passing filterChain...");
             filterChain.doFilter(request, response);
         } catch (AuthServerErrorException e) {
-            log.warn("AUTH server error occurred");
-            log.warn(e.getMessage());
+            log.error(e.getMessage());
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write(e.getMessage());
-        } catch (RecordNotFoundException e) {
-            log.warn("AUTH server can't find user");
-            log.warn(e.getMessage());
-            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+        } catch (AuthenticationErrorException e) {
+            log.error(e.getMessage());
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.getWriter().write(e.getMessage());
         }
     }
