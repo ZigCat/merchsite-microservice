@@ -88,7 +88,7 @@ public class UserController {
     }
 
     @DeleteMapping
-    public ResponseEntity<?> delete(@RequestParam Integer id,
+    public ResponseEntity<?> deleteUser(@RequestParam Integer id,
                                     @AuthenticationPrincipal AppUserDetails userDetails){
         try {
             service.delete(id, userDetails);

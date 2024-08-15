@@ -48,5 +48,15 @@ public class AppUser {
         this.role = role;
         this.creationDate = creationDate;
     }
+
+    public AppUser(Integer id, String fname, String lname, String email, String password, Role role, LocalDate creationDate) {
+        this.id = id;
+        this.fname = fname;
+        this.lname = lname;
+        this.email = email;
+        this.password = password;
+        this.role = role;
+        this.creationDate = creationDate;
+    }
 }
 
