@@ -27,7 +27,7 @@ public class OrderService extends EntityService<AppOrder>{
     @Autowired
     public OrderService(OrderRepository repository,
                         UserService userService) {
-        super(repository, AppOrder.class);
+        super(repository);
         this.orderRepository = repository;
         this.userService = userService;
     }

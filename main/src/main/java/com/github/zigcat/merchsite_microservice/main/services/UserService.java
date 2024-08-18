@@ -38,13 +38,13 @@ public class UserService extends EntityService<AppUser>{
     private PasswordEncoder encoder;
 
     @Autowired
-    public UserService(UserRepository repository,
+    public UserService(UserRepository userRepository,
                        KafkaProducerService kafkaProducerService,
                        AppSerializer<JwtRequest> jwtRequestSerializer,
                        AppDeserializer<JwtResponse> jwtResponseDeserializer,
                        PasswordEncoder encoder) {
-        super(repository, AppUser.class);
-        this.userRepository = repository;
+        super(userRepository);
+        this.userRepository = userRepository;
         this.kafkaProducerService = kafkaProducerService;
         this.jwtRequestSerializer = jwtRequestSerializer;
         this.jwtResponseDeserializer = jwtResponseDeserializer;

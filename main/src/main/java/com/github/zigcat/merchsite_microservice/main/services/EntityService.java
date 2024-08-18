@@ -13,12 +13,9 @@ import java.util.Optional;
 @Slf4j
 public abstract class EntityService<T> {
     protected JpaRepository<T, Integer> repository;
-    private final Class<T> type;
 
-    public EntityService(JpaRepository<T, Integer> repository,
-                         Class<T> type) {
+    public EntityService(JpaRepository<T, Integer> repository) {
         this.repository = repository;
-        this.type = type;
     }
 
     @Transactional(isolation = Isolation.READ_UNCOMMITTED, readOnly = true)
@@ -34,7 +31,7 @@ public abstract class EntityService<T> {
     @Transactional(rollbackFor = {RecordNotFoundException.class})
     public void delete(Integer id) throws RecordNotFoundException {
         T object = getById(id)
-                .orElseThrow(() -> new RecordNotFoundException(type.getName()));
+                .orElseThrow(RecordNotFoundException::new);
         repository.deleteById(id);
     }
 }
