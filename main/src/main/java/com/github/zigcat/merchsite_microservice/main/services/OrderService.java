@@ -21,8 +21,8 @@ import java.util.Optional;
 @Service
 @Slf4j
 public class OrderService extends EntityService<AppOrder>{
-    private final OrderRepository orderRepository;
-    private final UserService userService;
+    private OrderRepository orderRepository;
+    private UserService userService;
 
     @Autowired
     public OrderService(OrderRepository repository,

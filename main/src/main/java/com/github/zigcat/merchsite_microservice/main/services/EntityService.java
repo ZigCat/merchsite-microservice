@@ -12,7 +12,7 @@ import java.util.Optional;
 
 @Slf4j
 public abstract class EntityService<T> {
-    protected final JpaRepository<T, Integer> repository;
+    protected JpaRepository<T, Integer> repository;
     private final Class<T> type;
 
     public EntityService(JpaRepository<T, Integer> repository,

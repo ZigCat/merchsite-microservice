@@ -31,11 +31,11 @@ import java.util.concurrent.ExecutionException;
 @Service
 @Slf4j
 public class UserService extends EntityService<AppUser>{
-    private final UserRepository userRepository;
-    private final KafkaProducerService kafkaProducerService;
-    private final AppSerializer<JwtRequest> jwtRequestSerializer;
-    private final AppDeserializer<JwtResponse> jwtResponseDeserializer;
-    private final PasswordEncoder encoder;
+    private UserRepository userRepository;
+    private KafkaProducerService kafkaProducerService;
+    private AppSerializer<JwtRequest> jwtRequestSerializer;
+    private AppDeserializer<JwtResponse> jwtResponseDeserializer;
+    private PasswordEncoder encoder;
 
     @Autowired
     public UserService(UserRepository repository,
